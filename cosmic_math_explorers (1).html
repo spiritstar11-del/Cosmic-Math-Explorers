@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cosmic Math Explorers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: #050810;
+            color: #e2e8f0;
+            overflow-x: hidden;
+            overscroll-behavior: none;
+            touch-action: manipulation;
+            position: relative;
+        }
+
+        /* Starfield Background */
+        .stars, .twinkling {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%; height: 100%;
+            display: block;
+            z-index: -2;
+        }
+        .stars {
+            background: #000 url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="1" fill="white" opacity="0.8"/><circle cx="50" cy="150" r="1.5" fill="white" opacity="0.6"/><circle cx="150" cy="40" r="0.8" fill="white" opacity="0.9"/><circle cx="120" cy="180" r="1.2" fill="white" opacity="0.5"/><circle cx="180" cy="120" r="1" fill="white" opacity="0.7"/></svg>') repeat top center;
+            z-index: -2;
+        }
+        @keyframes twinkle { 0% { opacity: 0.3; } 50% { opacity: 1; } 100% { opacity: 0.3; } }
+        .twinkling {
+            background: transparent url('data:image/svg+xml;utf8,<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg"><circle cx="200" cy="200" r="2" fill="%234ade80" opacity="0.8"/><circle cx="350" cy="80" r="1.5" fill="%2360a5fa" opacity="0.6"/><circle cx="80" cy="300" r="2" fill="%23f472b6" opacity="0.9"/></svg>') repeat top center;
+            z-index: -1;
+            animation: twinkle 4s infinite ease-in-out;
+        }
+
+        .planet { position: fixed; border-radius: 50%; z-index: -1; opacity: 0.9; }
+        .planet-1 { width: 180px; height: 180px; background: radial-gradient(circle at 30% 30%, #ec4899, #831843); top: 5%; left: -60px; animation: float1 25s ease-in-out infinite alternate; box-shadow: inset -20px -20px 40px rgba(0,0,0,0.5), 0 0 20px rgba(236, 72, 153, 0.4); }
+        .planet-ring { position: absolute; width: 260px; height: 60px; border: 12px solid rgba(167, 139, 250, 0.4); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-20deg); box-shadow: 0 0 10px rgba(167, 139, 250, 0.5); }
+        .planet-2 { width: 100px; height: 100px; background: radial-gradient(circle at 30% 30%, #38bdf8, #0c4a6e); bottom: 15%; right: 2%; animation: float2 20s ease-in-out infinite alternate; box-shadow: inset -10px -10px 20px rgba(0,0,0,0.5), 0 0 15px rgba(56, 189, 248, 0.4); }
+        .planet-3 { width: 60px; height: 60px; background: radial-gradient(circle at 30% 30%, #facc15, #854d0e); top: 40%; right: -20px; animation: float3 18s ease-in-out infinite alternate; box-shadow: inset -10px -10px 20px rgba(0,0,0,0.5); }
+        
+        @keyframes float1 { 0% { transform: translateY(0) rotate(0deg); } 100% { transform: translateY(40px) rotate(10deg); } }
+        @keyframes float2 { 0% { transform: translateY(0) rotate(0deg); } 100% { transform: translateY(-50px) rotate(-15deg); } }
+        @keyframes float3 { 0% { transform: translateY(0) rotate(0deg); } 100% { transform: translateY(30px) rotate(-20deg); } }
+
+        .font-space { font-family: 'Orbitron', sans-serif; }
+
+        .neon-panel {
+            background: rgba(17, 24, 39, 0.85);
+            backdrop-filter: blur(8px);
+            border: 2px solid #3b82f6;
+            border-radius: 1rem;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3), inset 0 0 10px rgba(59, 130, 246, 0.2);
+            transition: all 0.2s ease;
+        }
+        .neon-border-green { border-color: #22c55e; box-shadow: 0 0 15px rgba(34, 197, 94, 0.3), inset 0 0 10px rgba(34, 197, 94, 0.2); }
+        .neon-border-purple { border-color: #a855f7; box-shadow: 0 0 15px rgba(168, 85, 247, 0.3), inset 0 0 10px rgba(168, 85, 247, 0.2); }
+
+        .space-btn {
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            border: 2px solid #4ade80;
+            color: #4ade80;
+            border-radius: 0.5rem;
+            text-transform: uppercase;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            transition: all 0.1s ease;
+            cursor: pointer;
+            text-shadow: 0 0 5px rgba(74, 222, 128, 0.5);
+            box-shadow: 0 0 10px rgba(74, 222, 128, 0.2);
+        }
+        .space-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 0 2px rgba(74, 222, 128, 0.8);
+            background: #4ade80;
+            color: #000;
+        }
+        .space-btn.selected {
+            background: #4ade80;
+            color: #000;
+            box-shadow: 0 0 15px rgba(74, 222, 128, 0.8);
+            text-shadow: none;
+        }
+
+        .numpad-btn {
+            background: rgba(30, 41, 59, 0.9);
+            border: 2px solid #60a5fa;
+            color: #fff;
+            border-radius: 0.5rem;
+            font-size: 2rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            transition: all 0.1s;
+            font-family: 'Orbitron', sans-serif;
+            text-shadow: 0 0 5px rgba(96, 165, 250, 0.8);
+        }
+        .numpad-btn:active {
+            transform: scale(0.92);
+            background: #60a5fa;
+            color: #000;
+            text-shadow: none;
+        }
+
+        @keyframes warpIn {
+            0% { transform: scale(0.5) translateY(100px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .warp-in { animation: warpIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        @keyframes laserFlash {
+            0%, 100% { box-shadow: 0 0 15px rgba(34, 197, 94, 0.3); border-color: #3b82f6; }
+            50% { box-shadow: 0 0 50px rgba(34, 197, 94, 1); border-color: #4ade80; background: rgba(34, 197, 94, 0.1); }
+        }
+        .correct-flash { animation: laserFlash 0.5s ease-in-out; }
+
+        @keyframes errorShake {
+            0%, 100% { transform: translateX(0); border-color: #3b82f6; }
+            20%, 60% { transform: translateX(-10px); border-color: #ef4444; box-shadow: 0 0 20px #ef4444; }
+            40%, 80% { transform: translateX(10px); border-color: #ef4444; box-shadow: 0 0 20px #ef4444;}
+        }
+        .wrong-shake { animation: errorShake 0.4s ease-in-out; }
+
+        @keyframes ufoHover {
+            0% { transform: translateY(-200px) scale(0.5); opacity: 0; }
+            10% { transform: translateY(0) scale(1); opacity: 1; }
+            70% { transform: translateY(-10px) scale(1); opacity: 1; }
+            80% { transform: translateY(20px) scale(1.1); opacity: 1; }
+            100% { transform: translateY(-1500px) scale(0.2); opacity: 0; }
+        }
+
+        @keyframes beamPulse {
+            0%, 15% { opacity: 0; transform: scaleY(0); transform-origin: top; }
+            20%, 65% { opacity: 1; transform: scaleY(1); transform-origin: top; }
+            75%, 100% { opacity: 0; transform: scaleY(0); transform-origin: top; }
+        }
+
+        @keyframes cowAbduct {
+            0%, 20% { transform: translateY(0) scale(1); opacity: 1; }
+            65% { transform: translateY(-250px) scale(0.5); opacity: 0; }
+            100% { transform: translateY(-250px) scale(0); opacity: 0; }
+        }
+
+        @keyframes alienBlink {
+            0%, 92%, 100% { transform: scaleY(1); }
+            96% { transform: scaleY(0.1); }
+        }
+        .eye-blink { transform-origin: 50px 50px; animation: alienBlink 4s infinite; }
+
+        @keyframes alienWave {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(45deg); }
+        }
+        .arm-wave { animation: alienWave 0.6s infinite ease-in-out; }
+
+        .math-vertical { display: flex; flex-direction: column; align-items: flex-end; }
+        .math-vertical .bottom-row { display: flex; flex-direction: row; border-bottom: 4px solid #fff; padding-bottom: 4px; margin-bottom: 8px; width: 100%; justify-content: flex-end; }
+        .math-vertical .operator { margin-right: 1rem; color: #f472b6; }
+        
+        .math-horizontal { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+        .math-horizontal .operator { color: #f472b6; font-size: 1.2em; }
+
+        .alien-icon { width: 40px; height: 40px; display: inline-block; margin: 2px; }
+        .picture-group { display: flex; flex-wrap: wrap; justify-content: center; max-width: 150px; }
+
+        .answer-box {
+            color: #fbbf24;
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.8);
+            min-width: 60px;
+            text-align: center;
+            border-bottom: 4px dashed #fbbf24;
+            padding: 0 10px;
+        }
+        .answer-box.empty { color: #475569; border-bottom-style: solid; text-shadow: none; }
+
+        .race-lane {
+            position: relative;
+            height: 40px;
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 20px;
+            border: 1px solid #334155;
+            margin-bottom: 8px;
+            overflow: visible;
+        }
+        .race-ship {
+            position: absolute;
+            top: -10px;
+            left: 0;
+            width: 60px;
+            height: 60px;
+            transition: left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));
+            z-index: 10;
+        }
+        .race-goal {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-2 sm:p-4">
+
+    <!-- Background -->
+    <div class="stars"></div>
+    <div class="twinkling"></div>
+
+    <div class="planet planet-1"><div class="planet-ring"></div></div>
+    <div class="planet planet-2"></div>
+    <div class="planet planet-3"></div>
+
+    <div id="app-container" class="w-full max-w-5xl mx-auto z-10 relative">
+        
+        <div id="menu-screen-1" class="neon-panel neon-border-purple p-6 flex flex-col gap-6 warp-in max-w-xl mx-auto">
+            <div class="text-center">
+                <h1 class="font-space text-4xl sm:text-5xl text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.8)]">
+                    COSMIC MATH
+                </h1>
+                <p class="text-lg text-blue-200 mt-2 font-bold tracking-widest uppercase">Space Race Edition</p>
+            </div>
+
+            <div class="text-center">
+                <h2 class="font-space text-xl mb-4 text-pink-400">How many Explorers?</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <button class="space-btn py-4 text-2xl font-space" onclick="setPlayerCount(1)">1</button>
+                    <button class="space-btn py-4 text-2xl font-space" onclick="setPlayerCount(2)">2</button>
+                    <button class="space-btn py-4 text-2xl font-space" onclick="setPlayerCount(3)">3</button>
+                    <button class="space-btn py-4 text-2xl font-space" onclick="setPlayerCount(4)">4</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="menu-screen-2" class="neon-panel neon-border-purple p-4 sm:p-6 flex flex-col gap-4 hidden max-h-[90vh] overflow-y-auto max-w-4xl mx-auto w-full">
+            <div class="text-center sticky top-0 bg-gray-900/95 py-2 z-20 rounded shadow-md">
+                <h2 class="font-space text-2xl text-blue-400">Configure Players</h2>
+                <p class="text-gray-400 text-sm">Select goals for each explorer!</p>
+            </div>
+
+            <div id="setup-players-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                <!-- Player setup blocks injected here -->
+            </div>
+
+            <button onclick="confirmPlayerSetup()" class="mt-4 py-3 text-xl font-space font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-transform active:scale-95 uppercase sticky bottom-0 z-20">
+                Lock In & Launch!
+            </button>
+        </div>
+
+        <div id="game-screen" class="hidden flex flex-col gap-4 w-full mx-auto relative">
+            
+            <!-- Race Track HUD -->
+            <div class="neon-panel p-4 flex flex-col gap-2 bg-gray-900/80" id="race-track-container">
+                <!-- Lanes injected via JS -->
+            </div>
+
+            <!-- Turn Indicator -->
+            <div id="turn-indicator" class="text-center font-space text-2xl text-yellow-400 tracking-widest uppercase drop-shadow-[0_0_10px_#eab308] animate-pulse">
+                Player 1's Turn!
+            </div>
+
+            <!-- Action Area: Side-by-side on large screens -->
+            <div class="flex flex-col md:flex-row gap-4 items-stretch mt-2 sm:mt-4">
+                
+                <!-- Main Stage -->
+                <div id="problem-stage" class="flex-1 neon-panel p-4 sm:p-8 flex flex-col items-center justify-center relative min-h-[200px] sm:min-h-[280px] overflow-visible">
+                    
+                    <button onclick="abortGame()" class="absolute top-2 right-2 px-2 py-1 bg-red-900/50 border border-red-500 text-red-400 font-space text-xs rounded hover:bg-red-800 z-30">ABORT</button>
+
+                    <!-- Cute Alien Waving from Bottom Corner -->
+                    <div class="absolute bottom-1 left-1 sm:bottom-2 sm:left-4 w-16 h-24 sm:w-20 sm:h-28 z-0 pointer-events-none drop-shadow-[0_0_15px_rgba(74,222,128,0.3)] opacity-70 sm:opacity-100">
+                        <svg viewBox="0 0 100 150" fill="none" overflow="visible">
+                            <!-- Body / Space Suit -->
+                            <path d="M 30 90 L 70 90 L 80 140 L 20 140 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width="4" stroke-linejoin="round"/>
+                            <path d="M 50 90 L 50 140" stroke="#94a3b8" stroke-width="4"/>
+                            <circle cx="50" cy="115" r="10" fill="#38bdf8" stroke="#0ea5e9" stroke-width="2"/>
+                            
+                            <!-- Left Arm -->
+                            <path d="M 25 95 Q 5 100 15 125" stroke="#e2e8f0" stroke-width="12" stroke-linecap="round"/>
+                            <circle cx="15" cy="125" r="6" fill="#4ade80" />
+                            
+                            <!-- Right Arm (Waving) -->
+                            <g class="arm-wave" style="transform-origin: 75px 95px;">
+                                <path d="M 75 95 Q 95 80 85 55" stroke="#e2e8f0" stroke-width="12" stroke-linecap="round"/>
+                                <circle cx="85" cy="55" r="6" fill="#4ade80" />
+                            </g>
+                            
+                            <!-- Head -->
+                            <g transform="translate(0, 5)">
+                                <path d="M 35 25 Q 30 10 20 15" stroke="#166534" stroke-width="4" stroke-linecap="round" fill="none"/>
+                                <circle cx="20" cy="15" r="5" fill="#4ade80"/>
+                                <path d="M 65 25 Q 70 10 80 15" stroke="#166534" stroke-width="4" stroke-linecap="round" fill="none"/>
+                                <circle cx="80" cy="15" r="5" fill="#4ade80"/>
+                                <path d="M 20 55 Q 20 20 50 20 Q 80 20 80 55 Q 80 90 50 90 Q 20 90 20 55" fill="#4ade80" stroke="#166534" stroke-width="4"/>
+                                <g class="eye-blink">
+                                    <circle cx="35" cy="50" r="12" fill="#0f172a"/>
+                                    <circle cx="65" cy="50" r="12" fill="#0f172a"/>
+                                    <circle cx="38" cy="46" r="4" fill="#fff"/>
+                                    <circle cx="68" cy="46" r="4" fill="#fff"/>
+                                </g>
+                                <path d="M 45 70 Q 50 75 55 70" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+                            </g>
+                        </svg>
+                    </div>
+
+                    <!-- Dynamic Content Container -->
+                    <div id="math-display-area" class="text-4xl sm:text-6xl font-space font-bold text-white w-full flex justify-center tracking-widest drop-shadow-md z-10">
+                        <!-- Javascript will build the layout here -->
+                    </div>
+                    
+                    <!-- Feedback Overlay -->
+                    <div id="feedback-overlay" class="absolute inset-0 flex items-center justify-center hidden pointer-events-none rounded-xl bg-gray-900/70 backdrop-blur-sm z-20">
+                        <div id="feedback-text" class="font-space text-5xl sm:text-7xl font-black italic uppercase drop-shadow-[0_0_20px_#fff] transform scale-0 transition-transform">
+                            <!-- STELLAR! -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Controls Area -->
+                <div class="w-full md:w-80 shrink-0 flex flex-col gap-4 justify-center">
+                    <!-- Numpad -->
+                    <div id="numpad-container" class="neon-panel p-2 sm:p-3 grid grid-cols-3 gap-2 w-full">
+                        <button class="numpad-btn" onclick="inputAnswer('1')">1</button>
+                        <button class="numpad-btn" onclick="inputAnswer('2')">2</button>
+                        <button class="numpad-btn" onclick="inputAnswer('3')">3</button>
+                        <button class="numpad-btn" onclick="inputAnswer('4')">4</button>
+                        <button class="numpad-btn" onclick="inputAnswer('5')">5</button>
+                        <button class="numpad-btn" onclick="inputAnswer('6')">6</button>
+                        <button class="numpad-btn" onclick="inputAnswer('7')">7</button>
+                        <button class="numpad-btn" onclick="inputAnswer('8')">8</button>
+                        <button class="numpad-btn" onclick="inputAnswer('9')">9</button>
+                        <button class="numpad-btn text-red-400 border-red-500/50 text-xl" onclick="clearInput()">DEL</button>
+                        <button class="numpad-btn" onclick="inputAnswer('0')">0</button>
+                        <button class="numpad-btn bg-green-600/20 text-green-400 border-green-500 text-xl" onclick="submitAnswer()">ENT</button>
+                    </div>
+
+                    <!-- Compare Pad (Shown for > < = mode) -->
+                    <div id="comparepad-container" class="neon-panel p-4 grid grid-cols-2 gap-4 hidden w-full h-full content-center">
+                        <button class="numpad-btn bg-blue-900/50 text-5xl sm:text-6xl hover:bg-blue-600 py-4 sm:py-8" onclick="submitCompare('<')">&lt;</button>
+                        <button class="numpad-btn bg-blue-900/50 text-5xl sm:text-6xl hover:bg-blue-600 py-4 sm:py-8" onclick="submitCompare('>')">&gt;</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="win-screen" class="hidden absolute inset-0 bg-black/90 flex flex-col items-center z-50 p-4 rounded-xl backdrop-blur-md overflow-hidden">
+            
+            <button onclick="resetToMenu()" class="absolute top-4 left-4 py-2 px-4 text-sm sm:text-lg font-space font-bold bg-blue-600/50 border border-blue-400 hover:bg-blue-500 text-white rounded-lg shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-transform active:scale-95 uppercase z-50 pointer-events-auto flex items-center gap-2">
+                &#8592; MAIN MENU
+            </button>
+
+            <h1 id="win-title" class="font-space text-5xl sm:text-7xl text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-green-400 drop-shadow-[0_0_20px_#eab308] animate-bounce uppercase mt-16 sm:mt-12 z-40 text-center">
+                PLAYER 1 WINS!
+            </h1>
+            
+            <div class="relative w-full max-w-lg h-[500px] sm:h-[600px] flex justify-center mt-4 sm:mt-8 z-10 pointer-events-none">
+                
+                <!-- Big UFO -->
+                <div class="absolute top-0 z-30 w-64 h-64 sm:w-80 sm:h-80" style="animation: ufoHover 6s cubic-bezier(0.4, 0, 0.2, 1) forwards;">
+                    <svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-[0_0_30px_rgba(56,189,248,0.8)]">
+                        <!-- Glass Dome Back -->
+                        <path d="M 50 110 C 50 40, 150 40, 150 110" fill="#082f49" opacity="0.6"/>
+                        <!-- Alien inside Dome (Cute Version!) -->
+                        <path d="M 75 65 Q 70 45 60 50" stroke="#166534" stroke-width="4" stroke-linecap="round" fill="none"/>
+                        <circle cx="60" cy="50" r="5" fill="#4ade80"/>
+                        <path d="M 125 65 Q 130 45 140 50" stroke="#166534" stroke-width="4" stroke-linecap="round" fill="none"/>
+                        <circle cx="140" cy="50" r="5" fill="#4ade80"/>
+                        <path d="M 60 110 Q 60 65 100 65 Q 140 65 140 110" fill="#4ade80" stroke="#166534" stroke-width="4"/>
+                        <circle cx="80" cy="90" r="10" fill="#0f172a"/>
+                        <circle cx="120" cy="90" r="10" fill="#0f172a"/>
+                        <circle cx="83" cy="87" r="3" fill="#fff"/>
+                        <circle cx="123" cy="87" r="3" fill="#fff"/>
+                        <path d="M 90 105 Q 100 110 110 105" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+                        <!-- Glass Dome Front -->
+                        <path d="M 50 110 C 50 40, 150 40, 150 110" fill="#38bdf8" opacity="0.3"/>
+                        <path d="M 60 90 C 60 60, 90 50, 110 55 C 80 60, 70 80, 65 100" fill="#fff" opacity="0.4"/>
+                        <!-- UFO Body -->
+                        <ellipse cx="100" cy="110" rx="90" ry="35" fill="#475569" stroke="#1e293b" stroke-width="4"/>
+                        <ellipse cx="100" cy="105" rx="80" ry="25" fill="#94a3b8"/>
+                        <ellipse cx="100" cy="100" rx="60" ry="15" fill="#cbd5e1"/>
+                        <!-- Lights -->
+                        <circle cx="20" cy="110" r="6" fill="#facc15" class="animate-pulse" style="animation-delay: 0.1s"/>
+                        <circle cx="50" cy="125" r="6" fill="#ef4444" class="animate-pulse" style="animation-delay: 0.2s"/>
+                        <circle cx="100" cy="135" r="6" fill="#3b82f6" class="animate-pulse" style="animation-delay: 0.3s"/>
+                        <circle cx="150" cy="125" r="6" fill="#22c55e" class="animate-pulse" style="animation-delay: 0.4s"/>
+                        <circle cx="180" cy="110" r="6" fill="#facc15" class="animate-pulse" style="animation-delay: 0.5s"/>
+                    </svg>
+                </div>
+
+                <!-- Tractor Beam -->
+                <div class="absolute top-[140px] sm:top-[180px] w-40 sm:w-56 h-[300px] sm:h-[400px] bg-gradient-to-b from-green-400/80 via-green-300/40 to-transparent -z-10" style="clip-path: polygon(20% 0, 80% 0, 100% 100%, 0% 100%); animation: beamPulse 6s ease-in-out forwards;">
+                </div>
+
+                <!-- Abducted BIG FUNNY Cow (New & Improved!) -->
+                <div class="absolute top-[320px] sm:top-[420px] w-32 h-32 sm:w-48 sm:h-48 z-20" style="animation: cowAbduct 6s ease-in forwards;">
+                    <svg viewBox="0 0 100 100" class="overflow-visible w-full h-full drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+                        <!-- Legs -->
+                        <rect x="30" y="60" width="8" height="20" rx="4" fill="#1e293b"/>
+                        <rect x="45" y="60" width="8" height="20" rx="4" fill="#1e293b"/>
+                        <rect x="65" y="60" width="8" height="20" rx="4" fill="#1e293b"/>
+                        <rect x="80" y="60" width="8" height="20" rx="4" fill="#1e293b"/>
+                        <!-- Tail -->
+                        <path d="M 90 40 Q 98 50 95 65" fill="none" stroke="#e2e8f0" stroke-width="3"/>
+                        <circle cx="95" cy="65" r="4" fill="#1e293b"/>
+                        <!-- Body -->
+                        <rect x="25" y="30" width="70" height="40" rx="15" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/>
+                        <!-- Black Spots -->
+                        <path d="M 35 30 Q 45 40 40 55 Q 30 50 35 30" fill="#1e293b"/>
+                        <path d="M 65 35 Q 80 30 75 50 Q 60 60 65 35" fill="#1e293b"/>
+                        <path d="M 85 60 Q 95 60 90 70 Q 80 70 85 60" fill="#1e293b"/>
+                        <!-- Udder -->
+                        <path d="M 50 70 C 50 80, 70 80, 70 70" fill="#fbcfe8" stroke="#f472b6" stroke-width="2"/>
+                        <line x1="55" y1="70" x2="55" y2="76" stroke="#f472b6" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="60" y1="70" x2="60" y2="78" stroke="#f472b6" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="65" y1="70" x2="65" y2="76" stroke="#f472b6" stroke-width="2" stroke-linecap="round"/>
+                        <!-- Head -->
+                        <ellipse cx="20" cy="35" rx="15" ry="20" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/>
+                        <!-- Snout -->
+                        <ellipse cx="15" cy="45" rx="12" ry="10" fill="#fbcfe8" stroke="#f472b6" stroke-width="2"/>
+                        <circle cx="10" cy="45" r="2" fill="#be185d"/>
+                        <circle cx="20" cy="45" r="2" fill="#be185d"/>
+                        <!-- Eyes -->
+                        <circle cx="12" cy="25" r="3" fill="#1e293b"/>
+                        <circle cx="25" cy="25" r="3" fill="#1e293b"/>
+                        <!-- Horns & Ears -->
+                        <path d="M 10 18 Q 5 10 0 15" fill="none" stroke="#fcd34d" stroke-width="3" stroke-linecap="round"/>
+                        <path d="M 30 18 Q 35 10 40 15" fill="none" stroke="#fcd34d" stroke-width="3" stroke-linecap="round"/>
+                        <ellipse cx="5" cy="22" rx="6" ry="3" fill="#f8fafc" stroke="#94a3b8" stroke-width="1" transform="rotate(-30 5 22)"/>
+                        <ellipse cx="35" cy="22" rx="6" ry="3" fill="#1e293b" stroke="#1e293b" stroke-width="1" transform="rotate(30 35 22)"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const colors = ['#3b82f6', '#22c55e', '#a855f7', '#f97316'];
+        
+        // Define SVG avatars
+        function createCuteAlien(color, stroke) {
+            return `<svg viewBox="0 0 100 100" fill="none">
+                <path d="M 35 25 Q 30 10 20 15" stroke="${stroke}" stroke-width="4" stroke-linecap="round" fill="none"/>
+                <circle cx="20" cy="15" r="5" fill="${color}"/>
+                <path d="M 65 25 Q 70 10 80 15" stroke="${stroke}" stroke-width="4" stroke-linecap="round" fill="none"/>
+                <circle cx="80" cy="15" r="5" fill="${color}"/>
+                <path d="M 20 55 Q 20 20 50 20 Q 80 20 80 55 Q 80 90 50 90 Q 20 90 20 55" fill="${color}" stroke="${stroke}" stroke-width="4"/>
+                <circle cx="35" cy="50" r="12" fill="#0f172a"/>
+                <circle cx="65" cy="50" r="12" fill="#0f172a"/>
+                <circle cx="38" cy="46" r="4" fill="#fff"/>
+                <circle cx="68" cy="46" r="4" fill="#fff"/>
+                <path d="M 45 70 Q 50 75 55 70" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+            </svg>`;
+        }
+        
+        const avatars = {
+            alienGreen: createCuteAlien('#4ade80', '#166534'),
+            alienPink: createCuteAlien('#f472b6', '#831843'),
+            alienBlue: createCuteAlien('#38bdf8', '#0c4a6e'),
+            alienOrange: createCuteAlien('#fb923c', '#7c2d12')
+        };
+        
+        const alienHeadSVG = `<svg viewBox="0 0 100 100" class="alien-icon"><path d="M 20 50 Q 50 10 80 50 Q 50 90 20 50" fill="#4ade80" stroke="#166534" stroke-width="4"/><circle cx="35" cy="45" r="8" fill="#000"/><circle cx="65" cy="45" r="8" fill="#000"/><circle cx="37" cy="43" r="2" fill="#fff" stroke="none"/><circle cx="67" cy="43" r="2" fill="#fff" stroke="none"/></svg>`;
+
+        const state = {
+            numPlayers: 1,
+            players: [], // Array of { id, name, character, skill, score, color }
+            currentPlayerIndex: 0,
+            
+            targetScore: 15, // Wins the race (Max 3 points per problem)
+            mistakesOnCurrent: 0,
+            
+            problemType: '',
+            problem: {},
+            currentInput: '',
+            
+            audioInitialized: false
+        };
+
+        let synth, laserSynth, buzzSynth, chordSynth, alienSynth;
+
+        function initAudio() {
+            if (state.audioInitialized) return;
+            Tone.start();
+            
+            synth = new Tone.Synth({
+                oscillator: { type: 'sine' },
+                envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 }
+            }).toDestination();
+            synth.volume.value = -10;
+
+            laserSynth = new Tone.PolySynth(Tone.Synth, {
+                oscillator: { type: 'triangle' },
+                envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 1 }
+            }).toDestination();
+            laserSynth.volume.value = -5;
+
+            buzzSynth = new Tone.Synth({
+                oscillator: { type: 'sawtooth' },
+                envelope: { attack: 0.05, decay: 0.2, sustain: 0.2, release: 0.5 }
+            }).toDestination();
+            buzzSynth.volume.value = -8;
+
+            alienSynth = new Tone.Synth({
+                oscillator: { type: 'sine' },
+                envelope: { attack: 0.5, decay: 0.2, sustain: 1, release: 2 }
+            }).toDestination();
+            alienSynth.volume.value = -5;
+
+            state.audioInitialized = true;
+        }
+
+        function playSound(type) {
+            if (!state.audioInitialized) return;
+            const now = Tone.now();
+            
+            switch(type) {
+                case 'click':
+                    synth.triggerAttackRelease("C6", "32n", now);
+                    break;
+                case 'correct':
+                    laserSynth.triggerAttackRelease(["C5", "E5", "G5", "C6"], "16n", now);
+                    break;
+                case 'wrong':
+                    buzzSynth.triggerAttackRelease("C2", "8n", now);
+                    buzzSynth.frequency.rampTo("C1", 0.3, now);
+                    break;
+                case 'win':
+                    laserSynth.triggerAttackRelease(["C4", "E4", "G4"], "8n", now);
+                    laserSynth.triggerAttackRelease(["F4", "A4", "C5"], "8n", now + 0.2);
+                    laserSynth.triggerAttackRelease(["G4", "B4", "D5"], "8n", now + 0.4);
+                    laserSynth.triggerAttackRelease(["C5", "E5", "G5", "C6"], "8n", now + 0.6);
+                    laserSynth.triggerAttackRelease(["E5", "G5", "C6", "E6"], "2n", now + 0.8);
+                    
+                    // Theremin / Spooky Alien UFO Sound
+                    alienSynth.triggerAttackRelease("C5", 4, now);
+                    alienSynth.frequency.setValueAtTime("C5", now);
+                    alienSynth.frequency.linearRampToValueAtTime("G5", now + 1);
+                    alienSynth.frequency.linearRampToValueAtTime("C4", now + 3);
+                    break;
+            }
+        }
+
+
+        function switchScreen(hideId, showId) {
+            document.getElementById(hideId).classList.add('hidden');
+            const showEl = document.getElementById(showId);
+            showEl.classList.remove('hidden');
+            showEl.classList.remove('warp-in');
+            void showEl.offsetWidth; // trigger reflow
+            showEl.classList.add('warp-in');
+        }
+
+        function setPlayerCount(num) {
+            initAudio();
+            playSound('click');
+            state.numPlayers = num;
+            state.players = [];
+            
+            buildSetupScreen();
+            switchScreen('menu-screen-1', 'menu-screen-2');
+        }
+
+        function buildSetupScreen() {
+            const container = document.getElementById('setup-players-container');
+            container.innerHTML = '';
+            
+            const skillOptions = `
+                <option value="compare_zeros">3-Digit Place Value & Compare</option>
+                <option value="add_1d_2d_regroup">Meteor Addition (1D + 2D Regroup)</option>
+                <option value="add_2d_regroup">Galactic Addition (2D + 2D Regroup)</option>
+                <option value="sub_2d_regroup">Black Hole Subtraction (2D - 2D Regroup)</option>
+                <option value="mixed_2d_regroup">Mixed Nebula (2D +/- 2D Regroup)</option>
+                <option value="number_friends">Number Friends (Make 5 and 10)</option>
+                <option value="picture_math">Alien Picture Math</option>
+            `;
+
+            const defaultAvatars = ['alienGreen', 'alienPink', 'alienBlue', 'alienOrange'];
+
+            for(let i = 1; i <= state.numPlayers; i++) {
+                const color = colors[i-1];
+                const charName = defaultAvatars[(i-1) % 4];
+                const avatarSVG = avatars[charName];
+                
+                const html = `
+                    <div class="border-2 rounded-xl p-3 bg-slate-900/50 relative overflow-hidden flex flex-row items-center gap-4" style="border-color: ${color}">
+                        <div class="absolute inset-0 opacity-10" style="background: ${color}"></div>
+                        
+                        <div class="w-16 h-16 shrink-0 relative z-10 p-2 bg-gray-800 rounded-lg border border-gray-600 shadow-inner flex items-center justify-center">
+                            ${avatarSVG}
+                        </div>
+                        
+                        <div class="flex-1 relative z-10">
+                            <h3 class="font-space text-lg mb-1 drop-shadow-md" style="color: ${color}; text-shadow: 0 0 5px ${color}">Player ${i}</h3>
+                            <label class="font-space text-xs text-gray-300 block mb-1">Select Goal:</label>
+                            <select id="skill-p${i}" class="w-full bg-slate-800 border border-gray-600 text-blue-200 p-2 rounded font-space outline-none focus:border-blue-400">
+                                ${skillOptions}
+                            </select>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += html;
+            }
+        }
+
+        function confirmPlayerSetup() {
+            playSound('click');
+            state.players = [];
+            
+            const defaultAvatars = ['alienGreen', 'alienPink', 'alienBlue', 'alienOrange'];
+            
+            for(let i = 1; i <= state.numPlayers; i++) {
+                const char = defaultAvatars[(i-1) % 4];
+                const skill = document.getElementById(`skill-p${i}`).value;
+                
+                state.players.push({
+                    id: i,
+                    name: `Player ${i}`,
+                    character: char,
+                    skill: skill,
+                    score: 0,
+                    color: colors[i-1]
+                });
+            }
+            
+            startGame();
+        }
+
+        function abortGame() {
+            playSound('click');
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('menu-screen-1').classList.remove('hidden');
+            document.getElementById('menu-screen-1').classList.add('warp-in');
+        }
+        
+        function resetToMenu() {
+            playSound('click');
+            document.getElementById('win-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('menu-screen-1').classList.remove('hidden');
+            document.getElementById('menu-screen-1').classList.add('warp-in');
+        }
+
+        function startGame() {
+            
+            // Reset scores
+            state.players.forEach(p => p.score = 0);
+            state.currentPlayerIndex = 0;
+            
+            buildRaceTrack();
+            updateTurnIndicator();
+            
+            switchScreen('menu-screen-2', 'game-screen');
+            generateProblem();
+        }
+
+        function buildRaceTrack() {
+            const container = document.getElementById('race-track-container');
+            container.innerHTML = '';
+            
+            state.players.forEach(p => {
+                const lane = document.createElement('div');
+                lane.className = 'race-lane';
+                lane.innerHTML = `
+                    <div class="race-ship" id="ship-p${p.id}">
+                        <div class="w-full h-full p-1 bg-gray-900 rounded-full border-2" style="border-color: ${p.color}">
+                            ${avatars[p.character]}
+                        </div>
+                    </div>
+                    <div class="race-goal">🏁</div>
+                `;
+                container.appendChild(lane);
+            });
+            updateShips();
+        }
+
+        function updateShips() {
+            state.players.forEach(p => {
+                const ship = document.getElementById(`ship-p${p.id}`);
+                const pct = (p.score / state.targetScore) * 100;
+                // Leave room for the ship width so it doesn't overflow right
+                const maxLeft = 100 - (60 / document.getElementById('race-track-container').offsetWidth * 100); 
+                const finalLeft = Math.min(pct, maxLeft);
+                ship.style.left = `calc(${finalLeft}% - ${finalLeft > 0 ? 30 : 0}px)`; // slight adjustment for visual centering
+            });
+        }
+
+        function updateTurnIndicator() {
+            const player = state.players[state.currentPlayerIndex];
+            const ind = document.getElementById('turn-indicator');
+            ind.innerText = `${player.name}'s Turn!`;
+            ind.style.color = player.color;
+            ind.style.textShadow = `0 0 10px ${player.color}`;
+        }
+
+        function nextTurn() {
+            state.currentPlayerIndex = (state.currentPlayerIndex + 1) % state.numPlayers;
+            updateTurnIndicator();
+            generateProblem();
+        }
+
+        function r(min, max) { return Math.floor(Math.random() * (max - min + 1) + min); }
+
+        function generateAlienGroup(count) {
+            let html = '<div class="picture-group">';
+            for(let i=0; i<count; i++) html += alienHeadSVG;
+            html += '</div>';
+            return html;
+        }
+
+        function generateProblem() {
+            state.currentInput = '';
+            state.mistakesOnCurrent = 0; // Reset mistakes for the new problem
+            let p = {};
+            
+            const currentPlayerSkill = state.players[state.currentPlayerIndex].skill;
+
+            switch(currentPlayerSkill) {
+                case 'compare_zeros':
+                    if (Math.random() > 0.5) {
+                        p.type = 'compare';
+                        let h = r(1,9); 
+                        let nonZero = r(1,9);
+                        let pool = [
+                            (h*100) + (nonZero*10),      // e.g. 960
+                            (h*100) + nonZero            // e.g. 906
+                        ];
+                        p.num1 = pool[r(0,1)];
+                        p.num2 = p.num1 === pool[0] ? pool[1] : pool[0]; // Ensure they are different
+                        
+                        if (p.num1 < p.num2) p.answer = '<';
+                        else if (p.num1 > p.num2) p.answer = '>';
+                        else p.answer = '='; 
+                    } else {
+                        p.type = 'horizontal';
+                        let h = r(1, 9);
+                        let t = Math.random() > 0.5 ? r(1, 9) : 0;
+                        let o = t === 0 ? r(1, 9) : 0; // force at least one zero
+                        if (t !== 0 && o !== 0) o = 0; // double check to ensure zero presence
+                        
+                        p.answer = (h * 100) + (t * 10) + o;
+                        p.stringFormat = `
+                            <div class="text-xl sm:text-3xl text-center leading-tight text-blue-200 flex flex-col items-center">
+                                <span>${h} Hundreds, ${t} Tens, ${o} Ones</span>
+                                <span class="text-lg sm:text-xl text-gray-400 my-1">=</span>
+                                <span id="answer-slot" class="answer-box empty h-10 sm:h-14 min-w-[100px] sm:min-w-[120px] text-3xl sm:text-4xl flex items-center justify-center pb-1">?</span>
+                            </div>
+                        `;
+                    }
+                    break;
+
+                case 'add_1d_2d_regroup':
+                    p.type = 'vertical';
+                    p.op = '+';
+                    let onesA = r(2, 9);
+                    let onesB = r(10 - onesA, 9); // Regroup
+                    let tens = r(1, 8);
+                    p.num1 = (tens * 10) + onesA;
+                    p.num2 = onesB;
+                    if(Math.random() > 0.5) { let temp = p.num1; p.num1 = p.num2; p.num2 = temp; }
+                    p.answer = p.num1 + p.num2;
+                    break;
+
+                case 'add_2d_regroup':
+                    p.type = 'vertical';
+                    p.op = '+';
+                    let add_a_ones = r(2, 9);
+                    let add_b_ones = r(10 - add_a_ones, 9);
+                    let add_a_tens = r(1, 7);
+                    let add_b_tens = r(1, 8 - add_a_tens);
+                    p.num1 = (add_a_tens * 10) + add_a_ones;
+                    p.num2 = (add_b_tens * 10) + add_b_ones;
+                    p.answer = p.num1 + p.num2;
+                    break;
+
+                case 'sub_2d_regroup':
+                    p.type = 'vertical';
+                    p.op = '-';
+                    let sub_top_tens = r(2, 9);
+                    let sub_bot_tens = r(1, sub_top_tens - 1);
+                    let sub_top_ones = r(0, 8);
+                    let sub_bot_ones = r(sub_top_ones + 1, 9);
+                    p.num1 = (sub_top_tens * 10) + sub_top_ones;
+                    p.num2 = (sub_bot_tens * 10) + sub_bot_ones;
+                    p.answer = p.num1 - p.num2;
+                    break;
+
+                case 'mixed_2d_regroup':
+                    p.type = 'vertical';
+                    p.op = Math.random() > 0.5 ? '+' : '-';
+                    if (p.op === '+') {
+                        let m_a_ones = r(2, 9);
+                        let m_b_ones = r(10 - m_a_ones, 9);
+                        let m_a_tens = r(1, 7);
+                        let m_b_tens = r(1, 8 - m_a_tens);
+                        p.num1 = (m_a_tens * 10) + m_a_ones;
+                        p.num2 = (m_b_tens * 10) + m_b_ones;
+                        p.answer = p.num1 + p.num2;
+                    } else {
+                        let m_top_tens = r(2, 9);
+                        let m_bot_tens = r(1, m_top_tens - 1);
+                        let m_top_ones = r(0, 8);
+                        let m_bot_ones = r(m_top_ones + 1, 9);
+                        p.num1 = (m_top_tens * 10) + m_top_ones;
+                        p.num2 = (m_bot_tens * 10) + m_bot_ones;
+                        p.answer = p.num1 - p.num2;
+                    }
+                    break;
+
+                case 'number_friends':
+                    p.type = 'horizontal';
+                    p.op = '+';
+                    let target = Math.random() > 0.5 ? 10 : 5;
+                    let given = r(0, target);
+                    p.answer = target - given;
+                    if (Math.random() > 0.5) {
+                        p.stringFormat = `${given} <span class="operator">+</span> <span id="answer-slot" class="answer-box empty">?</span> <span class="operator">=</span> ${target}`;
+                    } else {
+                        p.stringFormat = `<span id="answer-slot" class="answer-box empty">?</span> <span class="operator">+</span> ${given} <span class="operator">=</span> ${target}`;
+                    }
+                    break;
+
+                case 'picture_math':
+                    p.type = 'picture';
+                    p.op = Math.random() > 0.5 ? '+' : '-';
+                    
+                    if (p.op === '+') {
+                        p.num1 = r(1, 5);
+                        p.num2 = r(1, 5); // Total max 10
+                    } else {
+                        p.num1 = r(5, 10);
+                        p.num2 = r(1, p.num1 - 1); 
+                    }
+                    p.answer = p.op === '+' ? p.num1 + p.num2 : p.num1 - p.num2;
+                    
+                    // One is a number, one is pictures
+                    let usePicForNum1 = Math.random() > 0.5;
+                    let part1 = usePicForNum1 ? generateAlienGroup(p.num1) : p.num1;
+                    let part2 = !usePicForNum1 ? generateAlienGroup(p.num2) : p.num2;
+                    
+                    p.stringFormat = `
+                        <div class="flex items-center gap-2 sm:gap-4 flex-wrap justify-center">
+                            ${part1}
+                            <span class="operator">${p.op}</span>
+                            ${part2}
+                            <span class="operator">=</span>
+                            <span id="answer-slot" class="answer-box empty">?</span>
+                        </div>
+                    `;
+                    break;
+            }
+
+            state.problem = p;
+            renderProblem();
+        }
+
+        function renderProblem() {
+            const container = document.getElementById('math-display-area');
+            const numpad = document.getElementById('numpad-container');
+            const comparepad = document.getElementById('comparepad-container');
+            let html = '';
+
+            if (state.problem.type === 'compare') {
+                numpad.classList.add('hidden');
+                comparepad.classList.remove('hidden');
+                html = `
+                    <div class="math-horizontal text-4xl sm:text-6xl whitespace-nowrap flex-nowrap">
+                        <span>${state.problem.num1}</span>
+                        <span id="answer-slot" class="answer-box empty w-20 sm:w-28 text-center mx-2 sm:mx-4 pb-1 sm:pb-2">?</span>
+                        <span>${state.problem.num2}</span>
+                    </div>
+                `;
+            } else {
+                numpad.classList.remove('hidden');
+                comparepad.classList.add('hidden');
+                
+                if (state.problem.type === 'vertical') {
+                    html = `
+                        <div class="math-vertical">
+                            <div class="mr-2">${state.problem.num1}</div>
+                            <div class="bottom-row">
+                                <span class="operator">${state.problem.op}</span>
+                                <span class="mr-2">${state.problem.num2}</span>
+                            </div>
+                            <div id="answer-slot" class="answer-box empty w-full mr-2 h-12 sm:h-16 leading-tight">?</div>
+                        </div>
+                    `;
+                } else if (state.problem.type === 'horizontal' || state.problem.type === 'picture') {
+                    html = `<div class="math-horizontal">${state.problem.stringFormat}</div>`;
+                }
+            }
+
+            container.innerHTML = html;
+        }
+
+        function inputAnswer(num) {
+            playSound('click');
+            if (state.currentInput.length < 3) {
+                state.currentInput += num;
+                updateAnswerDisplay();
+            }
+        }
+
+        function clearInput() {
+            playSound('click');
+            state.currentInput = state.currentInput.slice(0, -1);
+            updateAnswerDisplay();
+        }
+
+        function updateAnswerDisplay() {
+            const slot = document.getElementById('answer-slot');
+            if (!slot) return;
+            
+            if (state.currentInput === '') {
+                slot.innerText = '?';
+                slot.classList.add('empty');
+            } else {
+                slot.innerText = state.currentInput;
+                slot.classList.remove('empty');
+            }
+        }
+
+        function submitCompare(symbol) {
+            state.currentInput = symbol;
+            updateAnswerDisplay();
+            processAnswer(symbol === state.problem.answer);
+        }
+
+        function submitAnswer() {
+            if (state.currentInput === '') return;
+            const userNum = parseInt(state.currentInput, 10);
+            processAnswer(userNum === state.problem.answer);
+        }
+
+        function processAnswer(isCorrect) {
+            const stage = document.getElementById('problem-stage');
+            const overlay = document.getElementById('feedback-overlay');
+            const text = document.getElementById('feedback-text');
+            const player = state.players[state.currentPlayerIndex];
+            
+            overlay.classList.remove('hidden');
+            text.classList.remove('scale-100');
+            void text.offsetWidth;
+            text.classList.add('scale-100');
+
+            if (isCorrect) {
+                playSound('correct');
+                text.innerText = "NICE!";
+                text.className = "font-space text-6xl font-black italic uppercase drop-shadow-[0_0_20px_#4ade80] text-green-400 transform scale-100 transition-transform duration-300";
+                stage.classList.add('correct-flash');
+                
+                // Variable points: 3 on first try, 2 on second try, 1 on 3rd or more
+                let points = Math.max(1, 3 - state.mistakesOnCurrent);
+                player.score += points;
+                
+                updateShips();
+                
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    stage.classList.remove('correct-flash');
+                    
+                    if (player.score >= state.targetScore) {
+                        triggerWin(player);
+                    } else {
+                        nextTurn();
+                    }
+                }, 1200);
+
+            } else {
+                playSound('wrong');
+                text.innerText = "CRASH!";
+                text.className = "font-space text-6xl font-black italic uppercase drop-shadow-[0_0_20px_#ef4444] text-red-500 transform scale-100 transition-transform duration-300";
+                stage.classList.add('wrong-shake');
+                state.currentInput = '';
+                state.mistakesOnCurrent++;
+                
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    stage.classList.remove('wrong-shake');
+                    updateAnswerDisplay();
+                    // Don't auto-skip turn on wrong, let them retry, or if you want strict turns, call nextTurn() here.
+                    // For kids math games, letting them retry is usually better until correct.
+                }, 1000);
+            }
+        }
+
+        function triggerWin(player) {
+            playSound('win');
+            const winScreen = document.getElementById('win-screen');
+            
+            document.getElementById('win-title').innerText = `${player.name} WINS!`;
+            document.getElementById('win-title').style.color = player.color;
+            
+            winScreen.classList.remove('hidden');
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if(document.getElementById('game-screen').classList.contains('hidden')) return;
+            if(document.getElementById('win-screen').classList.contains('hidden') === false) return;
+
+            if (state.problem.type === 'compare') {
+                if (e.key === '<' || e.key === ',') submitCompare('<');
+                if (e.key === '>' || e.key === '.') submitCompare('>');
+            } else {
+                if (e.key >= '0' && e.key <= '9') inputAnswer(e.key);
+                if (e.key === 'Backspace') clearInput();
+                if (e.key === 'Enter') submitAnswer();
+            }
+        });
+
+        window.onload = () => {
+            console.log("Cosmic Math Explorers initialized successfully!");
+            // The faulty loop searching for removed 'avatar-preview' elements has been erased.
+        };
+
+    </script>
+</body>
+</html>
